@@ -286,7 +286,7 @@ function renderLobby(){
 }
 
 // ===== NEUES SPIEL =====
-var NS={type:'watten',durH:0,durM:30,results:{},chips:{}};
+var NS={type:'watten',durH:0,durM:30,results:{},chips:{},signs:{}};
 
 function renderSpiel(){
     NS={type:'watten',durH:0,durM:30,results:{},chips:{}};
@@ -300,6 +300,7 @@ function _rf(){
     var playerSecs=active.map(function(p){
         var r=NS.results[p.id]||null;
         var c=NS.chips[p.id]||0;
+        var sign=NS.signs[p.id]||'+';
         return '<div class="result-section">'+
             '<div class="result-player-row">'+av(p,'sm')+'<div class="result-player-name">'+p.name+'</div></div>'+
             '<div class="result-btns">'+
@@ -309,7 +310,7 @@ function _rf(){
             '</div>'+
             '<div class="chips-row">'+
             '<span class="chips-lbl">Chips / Geld</span>'+
-            '<button type="button" class="chips-sign '+(c<0?'negative':'positive')+'" onclick="toggleSign(\''+p.id+'\')">'+(c<0?'-':'+')+'</button>'+
+            '<button type="button" class="chips-sign '+(sign==='-'?'negative':'positive')+'" onclick="toggleSign(\''+p.id+'\')">'+(sign==='-'?'-':'+')+'</button>'+
             '<input class="chips-input" type="number" min="0" max="9999" value="'+Math.abs(c)+'" '+
             'oninput="setChips(\''+p.id+'\',this.value)" placeholder="0">'+
             '<span class="chips-unit">EUR</span>'+
@@ -344,12 +345,13 @@ function setT(t){ NS.type=t; _rf(); }
 function setR(pid,r){ NS.results[pid]=r; _rf(); }
 function setChips(pid,val){
     var abs=parseFloat(val)||0;
-    var cur=NS.chips[pid]||0;
-    NS.chips[pid]= cur<0 ? -abs : abs;
+    var sign=NS.signs[pid]||'+';
+    NS.chips[pid]= sign==='-' ? -abs : abs;
 }
 function toggleSign(pid){
-    var cur=NS.chips[pid]||0;
-    NS.chips[pid]= cur<=0 ? Math.abs(cur) : -Math.abs(cur);
+    NS.signs[pid]= (NS.signs[pid]==='-') ? '+' : '-';
+    var abs=Math.abs(NS.chips[pid]||0);
+    NS.chips[pid]= NS.signs[pid]==='-' ? -abs : abs;
     _rf();
 }
 
