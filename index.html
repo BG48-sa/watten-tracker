@@ -62,18 +62,12 @@
         .result-btn.sel-niederlage    { border-color:var(--red);    color:var(--red);    background:rgba(239,68,68,.12); }
         .result-btn.sel-unentschieden { border-color:var(--gold);   color:var(--gold);   background:rgba(245,158,11,.12); }
 
-        .chips-row { display:flex; align-items:center; gap:10px; background:var(--s3); border-radius:10px; padding:10px 12px; }
+        .chips-row { display:flex; align-items:center; gap:8px; background:var(--s3); border-radius:10px; padding:10px 12px; }
         .chips-lbl { font-size:12px; color:var(--muted); flex-shrink:0; }
-        .chips-input { flex:1; background:transparent; border:none; color:var(--gold); font-size:18px; font-weight:800; outline:none; text-align:right; width:60px; }
-        .chips-unit { font-size:13px; color:var(--muted); flex-shrink:0; }
-        .chips-sign {
-            width:34px; height:34px; border-radius:8px; border:2px solid var(--border);
-            background:var(--s2); color:var(--text); font-size:18px; font-weight:800;
-            cursor:pointer; display:flex; align-items:center; justify-content:center;
-            flex-shrink:0; transition:all .18s;
-        }
-        .chips-sign.negative { border-color:var(--red); color:var(--red); background:rgba(239,68,68,.12); }
-        .chips-sign.positive { border-color:var(--accent); color:var(--accent); background:rgba(74,222,128,.12); }
+        .chips-val { flex:1; text-align:center; font-size:20px; font-weight:800; }
+        .chips-val.pos { color:var(--accent); }
+        .chips-val.neg { color:var(--red); }
+        .chips-step { width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:var(--s2); color:var(--text); font-size:20px; font-weight:800; cursor:pointer; flex-shrink:0; }
 
         .btn { background:var(--accent); color:#0b150b; border:none; border-radius:13px; padding:14px; font-size:15px; font-weight:800; cursor:pointer; width:100%; margin-top:8px; transition:opacity .18s; }
         .btn:hover { opacity:.88; } .btn:active { opacity:.75; } .btn:disabled { opacity:.35; cursor:not-allowed; }
@@ -286,10 +280,10 @@ function renderLobby(){
 }
 
 // ===== NEUES SPIEL =====
-var NS={type:'watten',durH:0,durM:30,results:{},chips:{},signs:{}};
+var NS={type:'watten',durH:0,durM:30,results:{},chips:{}};
 
 function renderSpiel(){
-    NS={type:'watten',durH:0,durM:30,results:{},chips:{},signs:{}};
+    NS={type:'watten',durH:0,durM:30,results:{},chips:{}};
     _rf();
 }
 
@@ -300,20 +294,19 @@ function _rf(){
     var playerSecs=active.map(function(p){
         var r=NS.results[p.id]||null;
         var c=NS.chips[p.id]||0;
-        var sign=NS.signs[p.id]||'+';
+        var cls=c<0?'neg':'pos';
         return '<div class="result-section">'+
             '<div class="result-player-row">'+av(p,'sm')+'<div class="result-player-name">'+p.name+'</div></div>'+
             '<div class="result-btns">'+
-            '<div class="result-btn '+(r==='sieg'?'sel-sieg':'')+'" onclick="setR(\''+p.id+'\',\'sieg\')">Sieg</div>'+
-            '<div class="result-btn '+(r==='niederlage'?'sel-niederlage':'')+'" onclick="setR(\''+p.id+'\',\'niederlage\')">Niederlage</div>'+
-            '<div class="result-btn '+(r==='unentschieden'?'sel-unentschieden':'')+'" onclick="setR(\''+p.id+'\',\'unentschieden\')">Unentschieden</div>'+
+            '<button type="button" class="result-btn '+(r==='sieg'?'sel-sieg':'')+'" onclick="setR(\''+p.id+'\',\'sieg\')">Sieg</button>'+
+            '<button type="button" class="result-btn '+(r==='niederlage'?'sel-niederlage':'')+'" onclick="setR(\''+p.id+'\',\'niederlage\')">Niederlage</button>'+
+            '<button type="button" class="result-btn '+(r==='unentschieden'?'sel-unentschieden':'')+'" onclick="setR(\''+p.id+'\',\'unentschieden\')">Unentschieden</button>'+
             '</div>'+
             '<div class="chips-row">'+
-            '<span class="chips-lbl">Chips / Geld</span>'+
-            '<button type="button" class="chips-sign '+(sign==='-'?'negative':'positive')+'" onclick="toggleSign(\''+p.id+'\')">'+(sign==='-'?'-':'+')+'</button>'+
-            '<input class="chips-input" type="number" min="0" max="9999" value="'+Math.abs(c)+'" '+
-            'oninput="setChips(\''+p.id+'\',this.value)" placeholder="0">'+
-            '<span class="chips-unit">EUR</span>'+
+            '<span class="chips-lbl">Chips</span>'+
+            '<button type="button" class="chips-step" onclick="stepChips(\''+p.id+'\',-1)">-</button>'+
+            '<div class="chips-val '+cls+'">'+c+' EUR</div>'+
+            '<button type="button" class="chips-step" onclick="stepChips(\''+p.id+'\',1)">+</button>'+
             '</div></div>';
     }).join('');
 
@@ -328,9 +321,9 @@ function _rf(){
         '<div class="card"><span class="field-lbl">Datum &amp; Uhrzeit</span><div class="date-box">'+now+'</div></div>'+
         '<div class="card"><span class="field-lbl">Spieltyp</span>'+
         '<div class="type-row">'+
-        '<div class="type-btn '+(NS.type==='watten'?'sel-w':'')+'" onclick="setT(\'watten\')">Watten</div>'+
-        '<div class="type-btn '+(NS.type==='bieten'?'sel-b':'')+'" onclick="setT(\'bieten\')">Bieten</div>'+
-        '<div class="type-btn '+(NS.type==='andere'?'sel-a':'')+'" onclick="setT(\'andere\')">Andere</div>'+
+        '<button type="button" class="type-btn '+(NS.type==='watten'?'sel-w':'')+'" onclick="setT(\'watten\')">Watten</button>'+
+        '<button type="button" class="type-btn '+(NS.type==='bieten'?'sel-b':'')+'" onclick="setT(\'bieten\')">Bieten</button>'+
+        '<button type="button" class="type-btn '+(NS.type==='andere'?'sel-a':'')+'" onclick="setT(\'andere\')">Andere</button>'+
         '</div></div>'+
         '<div class="card"><span class="field-lbl">Dauer</span>'+
         '<div class="dur-row">'+
@@ -343,15 +336,8 @@ function _rf(){
 
 function setT(t){ NS.type=t; _rf(); }
 function setR(pid,r){ NS.results[pid]=r; _rf(); }
-function setChips(pid,val){
-    var abs=parseFloat(val)||0;
-    var sign=NS.signs[pid]||'+';
-    NS.chips[pid]= sign==='-' ? -abs : abs;
-}
-function toggleSign(pid){
-    NS.signs[pid]= (NS.signs[pid]==='-') ? '+' : '-';
-    var abs=Math.abs(NS.chips[pid]||0);
-    NS.chips[pid]= NS.signs[pid]==='-' ? -abs : abs;
+function stepChips(pid, dir){
+    NS.chips[pid]= (NS.chips[pid]||0) + dir;
     _rf();
 }
 
