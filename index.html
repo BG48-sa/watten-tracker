@@ -64,8 +64,16 @@
 
         .chips-row { display:flex; align-items:center; gap:10px; background:var(--s3); border-radius:10px; padding:10px 12px; }
         .chips-lbl { font-size:12px; color:var(--muted); flex-shrink:0; }
-        .chips-input { flex:1; background:transparent; border:none; color:var(--gold); font-size:18px; font-weight:800; outline:none; text-align:right; }
+        .chips-input { flex:1; background:transparent; border:none; color:var(--gold); font-size:18px; font-weight:800; outline:none; text-align:right; width:60px; }
         .chips-unit { font-size:13px; color:var(--muted); flex-shrink:0; }
+        .chips-sign {
+            width:34px; height:34px; border-radius:8px; border:2px solid var(--border);
+            background:var(--s2); color:var(--text); font-size:18px; font-weight:800;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; transition:all .18s;
+        }
+        .chips-sign.negative { border-color:var(--red); color:var(--red); background:rgba(239,68,68,.12); }
+        .chips-sign.positive { border-color:var(--accent); color:var(--accent); background:rgba(74,222,128,.12); }
 
         .btn { background:var(--accent); color:#0b150b; border:none; border-radius:13px; padding:14px; font-size:15px; font-weight:800; cursor:pointer; width:100%; margin-top:8px; transition:opacity .18s; }
         .btn:hover { opacity:.88; } .btn:active { opacity:.75; } .btn:disabled { opacity:.35; cursor:not-allowed; }
@@ -301,8 +309,9 @@ function _rf(){
             '</div>'+
             '<div class="chips-row">'+
             '<span class="chips-lbl">Chips / Geld</span>'+
-            '<input class="chips-input" type="number" min="-9999" max="9999" value="'+c+'" '+
-            'oninput="NS.chips[\''+p.id+'\']=parseFloat(this.value)||0" placeholder="0">'+
+            '<div class="chips-sign '+(c<0?'negative':'positive')+'" onclick="toggleSign(\''+p.id+'\')">'+(c<0?'-':'+')+'</div>'+
+            '<input class="chips-input" type="number" min="0" max="9999" value="'+Math.abs(c)+'" '+
+            'oninput="setChips(\''+p.id+'\',this.value)" placeholder="0">'+
             '<span class="chips-unit">EUR</span>'+
             '</div></div>';
     }).join('');
@@ -333,6 +342,16 @@ function _rf(){
 
 function setT(t){ NS.type=t; _rf(); }
 function setR(pid,r){ NS.results[pid]=r; _rf(); }
+function setChips(pid,val){
+    var abs=parseFloat(val)||0;
+    var cur=NS.chips[pid]||0;
+    NS.chips[pid]= cur<0 ? -abs : abs;
+}
+function toggleSign(pid){
+    var cur=NS.chips[pid]||0;
+    NS.chips[pid]= cur<=0 ? Math.abs(cur) : -Math.abs(cur);
+    _rf();
+}
 
 function saveSpiel(){
     var active=D.players.filter(function(p){ return p.active; });
