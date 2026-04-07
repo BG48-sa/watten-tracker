@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ledger — Watten Tracker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg:         #0b150b;
+            --surface:    #141f14;
+            --surface2:   #1c2e1c;
+            --accent:     #4ade80;
+            --text:       #f0fdf0;
+            --text-muted: #5a8a5a;
+            --border:     #243824;
+            --blue:       #3B82F6;
+            --red:        #EF4444;
+            --gold:       #F59E0B;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 80px;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 22px 20px 16px;
+        }
+        .header-brand {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .header-title {
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        /* ── BOTTOM NAV ── */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .nav-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0 13px;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 11px;
+            gap: 3px;
+            border: none;
+            background: none;
+            transition: color 0.2s;
+        }
+        .nav-btn.active, .nav-btn:hover { color: var(--accent); }
+        .nav-icon { font-size: 21px; }
+
+        /* ── SECTIONS ── */
+        .section { display: none; padding: 18px 16px; }
+        .section.active { display: block; }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px 16px;
+            margin-bottom: 14px;
+        }
+        .card-label {
+            font-size: 10px;
+            letter-spacing: 2.5px;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        /* ── AVATAR ── */
+        .avatar {
+            width: 50px; height: 50px;
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 19px; font-weight: 800;
+            color: #fff; flex-shrink: 0;
+        }
+        .avatar.sm { width: 36px; height: 36px; border-radius: 10px; font-size: 14px; }
+        .avatar.xs { width: 28px; height: 28px; border-radius: 8px; font-size: 11px; }
+
+        /* ── PLAYER CARD ── */
+        .player-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 9px;
+        }
+        .player-info { flex: 1; }
+        .player-name { font-weight: 700; font-size: 15px; }
+        .player-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .badge {
+            font-size: 10px; padding: 3px 10px;
+            border-radius: 20px; font-weight: 700; cursor: pointer;
+        }
+        .badge-aktiv   { background: rgba(74,222,128,.15); color: var(--accent); }
+        .badge-inaktiv { background: rgba(239,68,68,.12);  color: var(--red); }
+
+        /* ── LEADERBOARD ── */
+        .lb-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .lb-row:last-child { border-bottom: none; }
+        .lb-rank {
+            width: 26px; height: 26px; border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800; flex-shrink: 0;
+        }
+        .r1 { background:#f59e0b22; color:#f59e0b; }
+        .r2 { background:#94a3b822; color:#94a3b8; }
+        .r3 { background:#b4521322; color:#b45213; }
+        .rn { background:var(--surface2); color:var(--text-muted); }
+        .lb-name { flex: 1; font-weight: 600; }
+        .lb-val  { font-weight: 800; font-size: 20px; color: var(--accent); }
+        .lb-sub  { font-size: 11px; color: var(--text-muted); }
+
+        /* ── GAME ITEM ── */
+        .game-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 13px 14px;
+            margin-bottom: 9px;
+        }
+        .game-date { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+        .game-row  { display: flex; align-items: center; gap: 10px; }
+        .game-team { flex: 1; }
+        .game-team-lbl { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+        .game-team-players { font-weight: 700; font-size: 13px; }
+        .win-badge {
+            display: inline-block; margin-top: 4px;
+            font-size: 10px; padding: 2px 8px; border-radius: 20px;
+            background: rgba(74,222,128,.15); color: var(--accent); font-weight: 700;
+        }
+        .vs-tag {
+            font-size: 11px; font-weight: 800; color: var(--text-muted);
+            background: var(--border); padding: 3px 7px; border-radius: 6px;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            background: var(--accent); color: #0b150b;
+            border: none; border-radius: 12px;
+            padding: 14px 22px; font-size: 15px; font-weight: 800;
+            cursor: pointer; width: 100%; margin-top: 8px;
+            transition: opacity .18s;
+        }
+        .btn:hover  { opacity: .88; }
+        .btn:active { opacity: .75; }
+        .btn.outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn.danger  { background: transparent; border: 1px solid rgba(239,68,68,.4); color: var(--red); }
+        .btn.sm      { width: auto; padding: 9px 18px; font-size: 13px; margin-top: 0; }
+        .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+        /* ── PLAYER SELECTOR (game form) ── */
+        .p-selector { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 10px; }
+        .p-sel-btn {
+            background: var(--surface2); border: 2px solid var(--border);
+            border-radius: 12px; padding: 10px 5px;
+            cursor: pointer; text-align: center; color: var(--text);
+            transition: all .18s; user-select: none;
+        }
+        .p-sel-btn:hover { border-color: var(--accent); }
+        .p-sel-btn.t1 { border-color: var(--blue);  background: rgba(59,130,246,.12); }
+        .p-sel-btn.t2 { border-color: var(--red);   background: rgba(239,68,68,.12); }
+        .p-sel-name { font-size: 12px; font-weight: 700; margin-top: 6px; }
+
+        /* ── TEAMS DISPLAY ── */
+        .teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .team-box {
+            background: var(--surface2); border-radius: 12px; padding: 13px;
+        }
+        .team-box-lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+        .team-box-names { font-weight: 700; font-size: 14px; min-height: 22px; }
+
+        /* ── WINNER SELECTOR ── */
+        .winner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .winner-btn {
+            background: var(--surface2); border: 2px solid var(--border);
+            border-radius: 12px; padding: 14px; cursor: pointer;
+            text-align: center; color: var(--text); font-weight: 700;
+            transition: all .18s; font-size: 13px;
+        }
+        .winner-btn:hover { border-color: var(--accent); }
+        .winner-btn.sel  { border-color: var(--accent); background: rgba(74,222,128,.1); }
+        .winner-btn-lbl  { font-size: 10px; margin-bottom: 5px; font-weight: 700; }
+
+        /* ── STATS ── */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .stat-box {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 16px; text-align: center;
+        }
+        .stat-val { font-size: 34px; font-weight: 800; color: var(--accent); }
+        .stat-lbl { font-size: 10px; color: var(--text-muted); margin-top: 3px; letter-spacing: 1.5px; text-transform: uppercase; }
+
+        /* ── SETTINGS ROW ── */
+        .settings-section-lbl {
+            font-size: 10px; letter-spacing: 2.5px; color: var(--text-muted);
+            text-transform: uppercase; font-weight: 700;
+            padding: 6px 4px; margin-bottom: 8px;
+        }
+        .settings-row {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 14px; padding: 16px 16px;
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 9px; cursor: pointer;
+            transition: border-color .18s;
+        }
+        .settings-row:hover { border-color: var(--accent); }
+        .settings-row.red:hover { border-color: var(--red); }
+        .settings-icon { font-size: 22px; flex-shrink: 0; }
+        .settings-info { flex: 1; }
+        .settings-title { font-weight: 700; font-size: 15px; }
+        .settings-title.red { color: var(--red); }
+        .settings-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        /* ── EMPTY ── */
+        .empty { text-align: center; padding: 36px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 44px; margin-bottom: 10px; }
+        .empty-text { font-size: 14px; }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom: 90px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent); color: #0b150b;
+            padding: 11px 24px; border-radius: 24px;
+            font-weight: 800; font-size: 14px;
+            z-index: 9999; opacity: 0; transition: opacity .25s;
+            white-space: nowrap; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+
+        /* ── FOOTER ── */
+        .app-footer {
+            text-align: center; padding: 28px 20px 10px;
+            font-size: 11px; color: var(--text-muted); line-height: 1.8;
+        }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.7); z-index: 500;
+            align-items: flex-end; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 22px 22px 0 0; padding: 24px 20px 36px;
+            width: 100%; max-width: 640px; max-height: 85vh; overflow-y: auto;
+        }
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+
+        /* ── INPUT ── */
+        input[type=text] {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text);
+            padding: 11px 14px; font-size: 14px; width: 100%;
+        }
+        input[type=text]:focus { outline: 1px solid var(--accent); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-lbl {
+            display: block; font-size: 11px; letter-spacing: 1.5px;
+            color: var(--accent); text-transform: uppercase; font-weight: 700;
+            margin-bottom: 7px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-brand">Watten Tracker</div>
+    <div class="header-title">The Ledger</div>
+</div>
+
+<!-- SECTIONS -->
+<div id="sec-dashboard" class="section active"></div>
+<div id="sec-game"      class="section"></div>
+<div id="sec-stats"     class="section"></div>
+<div id="sec-settings"  class="section"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+    <button class="nav-btn active" onclick="nav('dashboard')">
+        <span class="nav-icon">🏆</span><span>Übersicht</span>
+    </button>
+    <button class="nav-btn" onclick="nav('game')">
+        <span class="nav-icon">🃏</span><span>Spiel</span>
+    </button>
+    <button class="nav-btn" onclick="nav('stats')">
+        <span class="nav-icon">📊</span><span>Statistik</span>
+    </button>
+    <button class="nav-btn" onclick="nav('settings')">
+        <span class="nav-icon">⚙️</span><span>Einstellungen</span>
+    </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL: Add Player -->
+<div class="modal-overlay" id="modal-addplayer">
+    <div class="modal">
+        <div class="modal-title">Neues Mitglied hinzufügen</div>
+        <div class="form-group">
+            <label class="form-lbl">Name</label>
+            <input type="text" id="new-player-name" placeholder="Name eingeben…" onkeydown="if(event.key==='Enter')addPlayerConfirm()">
+        </div>
+        <div id="color-picker" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;"></div>
+        <button class="btn" onclick="addPlayerConfirm()">✓ Mitglied hinzufügen</button>
+        <button class="btn outline" style="margin-top:8px" onclick="closeModal('modal-addplayer')">Abbrechen</button>
+    </div>
+</div>
+
+<!-- MODAL: Player Register -->
+<div class="modal-overlay" id="modal-register">
+    <div class="modal">
+        <div class="modal-title">Spieler-Register</div>
+        <div id="modal-register-list"></div>
+        <button class="btn outline" style="margin-top:8px" onclick="closeModal('modal-register')">Schließen</button>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+
+const KEY = 'wattenLedger_v2';
+
+const PALETTE = ['#3B82F6','#EC4899','#8B5CF6','#F59E0B','#10B981','#EF4444',
+                 '#06B6D4','#F97316','#84CC16','#6366F1'];
+
+const DEFAULT = {
+    players: [
+        { id:'p1', name:'Bernd', color:'#3B82F6', active:true },
+        { id:'p2', name:'Anna',  color:'#EC4899', active:true },
+        { id:'p3', name:'Rita',  color:'#8B5CF6', active:true },
+        { id:'p4', name:'Conny', color:'#F59E0B', active:true },
+        { id:'p5', name:'Erwin', color:'#10B981', active:true },
+        { id:'p6', name:'Maria', color:'#EF4444', active:true },
+    ],
+    games: []
+};
+
+function load() {
+    try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : clone(DEFAULT); }
+    catch { return clone(DEFAULT); }
+}
+function save()        { localStorage.setItem(KEY, JSON.stringify(D)); }
+function clone(o)      { return JSON.parse(JSON.stringify(o)); }
+function pid()         { return 'p' + Date.now(); }
+function gid()         { return 'g' + Date.now(); }
+function byId(id)      { return D.players.find(p => p.id === id); }
+function initial(name) { return name.charAt(0).toUpperCase(); }
+
+let D = load();
+
+// ═══════════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════════
+
+function statsFor(playerId) {
+    let games = 0, wins = 0;
+    D.games.forEach(g => {
+        const inT1 = g.team1.includes(playerId);
+        const inT2 = g.team2.includes(playerId);
+        if (inT1 || inT2) {
+            games++;
+            if ((inT1 && g.winner === 1) || (inT2 && g.winner === 2)) wins++;
+        }
+    });
+    return { games, wins, losses: games - wins, rate: games ? Math.round(wins / games * 100) : 0 };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
+
+function avatar(p, size='') {
+    return `<div class="avatar ${size}" style="background:${p.color}">${initial(p.name)}</div>`;
+}
+
+function fmtDate(ts) {
+    return new Date(ts).toLocaleString('de-DE',
+        { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+let _toastTimer;
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+
+function nav(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sec-' + name).classList.add('active');
+    document.querySelector(`.nav-btn[onclick*="${name}"]`).classList.add('active');
+    renders[name]();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════
+
+function renderDashboard() {
+    const ranked = D.players
+        .filter(p => p.active)
+        .map(p => ({ ...p, s: statsFor(p.id) }))
+        .sort((a,b) => b.s.wins - a.s.wins || b.s.rate - a.s.rate);
+
+    const rCls = ['r1','r2','r3'];
+    const rSym = ['🥇','🥈','🥉'];
+
+    const rows = ranked.length
+        ? ranked.map((p,i) => `
+            <div class="lb-row">
+                <div class="lb-rank ${i < 3 ? rCls[i] : 'rn'}">${i < 3 ? rSym[i] : i+1}</div>
+                ${avatar(p,'sm')}
+                <div class="lb-name">${p.name}</div>
+                <div style="text-align:right">
+                    <div class="lb-val">${p.s.wins}</div>
+                    <div class="lb-sub">${p.s.rate}% · ${p.s.games} Sp.</div>
+                </div>
+            </div>`).join('')
+        : '<div class="empty"><div class="empty-icon">👤</div><div class="empty-text">Keine Spieler</div></div>';
+
+    const recent = [...D.games].reverse();
+    const recentHtml = recent.length
+        ? recent.map(g => {
+            const t1 = g.team1.map(id => byId(id)?.name || '?').join(' & ');
+            const t2 = g.team2.map(id => byId(id)?.name || '?').join(' & ');
+            return `
+            <div class="game-item">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                    <div class="game-date" style="margin-bottom:0">${fmtDate(g.timestamp)}</div>
+                    <button onclick="deleteGame('${g.id}')" style="
+                        background:transparent;border:1px solid rgba(239,68,68,.35);
+                        color:var(--red);border-radius:8px;padding:3px 10px;
+                        font-size:12px;font-weight:700;cursor:pointer;">
+                        🗑 Löschen
+                    </button>
+                </div>
+                <div class="game-row">
+                    <div class="game-team">
+                        <div class="game-team-lbl" style="color:var(--blue)">Team 1</div>
+                        <div class="game-team-players">${t1}</div>
+                        ${g.winner === 1 ? '<div class="win-badge">✓ Gewinner</div>' : ''}
+                    </div>
+                    <div class="vs-tag">VS</div>
+                    <div class="game-team" style="text-align:right">
+                        <div class="game-team-lbl" style="color:var(--red)">Team 2</div>
+                        <div class="game-team-players">${t2}</div>
+                        ${g.winner === 2 ? '<div class="win-badge">✓ Gewinner</div>' : ''}
+                    </div>
+                </div>
+            </div>`;
+          }).join('')
+        : '<div class="empty"><div class="empty-icon">🃏</div><div class="empty-text">Noch keine Spiele erfasst</div></div>';
+
+    document.getElementById('sec-dashboard').innerHTML = `
+        <div class="card">
+            <div class="card-label">🏆 Rangliste</div>
+            ${rows}
+        </div>
+        <div class="card">
+            <div class="card-label">🕐 Letzte Spiele</div>
+            ${recentHtml}
+        </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GAME FORM
+// ═══════════════════════════════════════════════════════════
+
+let G = { team1:[], team2:[], winner:null };
+
+function renderGame() {
+    G = { team1:[], team2:[], winner:null };
+    _renderGameForm();
+}
+
+function _renderGameForm() {
+    const active = D.players.filter(p => p.active);
+
+    const pBtns = active.map(p => {
+        let cls = 'p-sel-btn';
+        let sub = '';
+        if (G.team1.includes(p.id))      { cls += ' t1'; sub = `<div style="font-size:10px;color:var(--blue);margin-top:4px">Team 1</div>`; }
+        else if (G.team2.includes(p.id)) { cls += ' t2'; sub = `<div style="font-size:10px;color:var(--red);margin-top:4px">Team 2</div>`; }
+        return `<div class="${cls}" onclick="selPlayer('${p.id}')">${avatar(p,'sm')}<div class="p-sel-name">${p.name}</div>${sub}</div>`;
+    }).join('');
+
+    const t1Names = G.team1.map(id => byId(id)?.name || '?').join(' & ') || '—';
+    const t2Names = G.team2.map(id => byId(id)?.name || '?').join(' & ') || '—';
+
+    const ready4 = G.team1.length === 2 && G.team2.length === 2;
+
+    const winnerHtml = ready4 ? `
+        <div class="form-group">
+            <label class="form-lbl">Gewinner</label>
+            <div class="winner-grid">
+                <div class="winner-btn ${G.winner===1?'sel':''}" onclick="selWinner(1)">
+                    <div class="winner-btn-lbl" style="color:var(--blue)">TEAM 1</div>
+                    ${t1Names}
+                </div>
+                <div class="winner-btn ${G.winner===2?'sel':''}" onclick="selWinner(2)">
+                    <div class="winner-btn-lbl" style="color:var(--red)">TEAM 2</div>
+                    ${t2Names}
+                </div>
+            </div>
+        </div>` : '';
+
+    const canSave = ready4 && G.winner !== null;
+    const hint = G.team1.length + G.team2.length < 4 ? '4 Spieler auswählen…' : 'Gewinner auswählen…';
+
+    document.getElementById('sec-game').innerHTML = `
+        <div class="card">
+            <div class="card-label">🃏 Neues Spiel erfassen</div>
+
+            <div class="form-group">
+                <label class="form-lbl">Spieler auswählen</label>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+                    1× tippen → Team 1 &nbsp;·&nbsp; 2× tippen → Team 2 &nbsp;·&nbsp; 3× tippen → entfernen
+                </div>
+                <div class="p-selector">${pBtns}</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-lbl">Teams</label>
+                <div class="teams-grid">
+                    <div class="team-box" style="border:1px solid rgba(59,130,246,.3)">
+                        <div class="team-box-lbl" style="color:var(--blue)">TEAM 1</div>
+                        <div class="team-box-names">${t1Names}</div>
+                    </div>
+                    <div class="team-box" style="border:1px solid rgba(239,68,68,.3)">
+                        <div class="team-box-lbl" style="color:var(--red)">TEAM 2</div>
+                        <div class="team-box-names">${t2Names}</div>
+                    </div>
+                </div>
+            </div>
+
+            ${winnerHtml}
+
+            ${canSave
+                ? `<button class="btn" onclick="saveGame()">✓ Spiel speichern</button>`
+                : `<button class="btn" disabled>${hint}</button>`}
+        </div>`;
+}
+
+function selPlayer(id) {
+    if (G.team1.includes(id)) {
+        G.team1 = G.team1.filter(x => x !== id);
+        if (G.team2.length < 2) G.team2.push(id);
+    } else if (G.team2.includes(id)) {
+        G.team2 = G.team2.filter(x => x !== id);
+    } else {
+        if      (G.team1.length < 2) G.team1.push(id);
+        else if (G.team2.length < 2) G.team2.push(id);
+    }
+    G.winner = null;
+    _renderGameForm();
+}
+
+function selWinner(n) { G.winner = n; _renderGameForm(); }
+
+function saveGame() {
+    if (G.team1.length !== 2 || G.team2.length !== 2 || !G.winner) return;
+    D.games.push({ id: gid(), timestamp: Date.now(),
+                   team1:[...G.team1], team2:[...G.team2], winner:G.winner });
+    save();
+    toast('✓ Spiel gespeichert!');
+    G = { team1:[], team2:[], winner:null };
+    _renderGameForm();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATISTICS
+// ═══════════════════════════════════════════════════════════
+
+function renderStats() {
+    const pStats = D.players
+        .map(p => ({ ...p, s: statsFor(p.id) }))
+        .sort((a,b) => b.s.wins - a.s.wins);
+
+    const rows = pStats.map(p => `
+        <div class="player-card">
+            ${avatar(p)}
+            <div class="player-info">
+                <div class="player-name">${p.name}</div>
+                <div class="player-sub">${p.s.wins} Siege · ${p.s.losses} Niederlagen · ${p.s.rate}% Siegrate</div>
+            </div>
+            <div style="text-align:right">
+                <div style="font-size:26px;font-weight:800;color:var(--accent)">${p.s.wins}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${p.s.games} Sp.</div>
+            </div>
+        </div>`).join('');
+
+    document.getElementById('sec-stats').innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-box"><div class="stat-val">${D.games.length}</div><div class="stat-lbl">Spiele Total</div></div>
+            <div class="stat-box"><div class="stat-val">${D.players.filter(p=>p.active).length}</div><div class="stat-lbl">Aktive Spieler</div></div>
+        </div>
+        <div class="card">
+            <div class="card-label">📊 Spieler-Statistiken</div>
+            ${rows.length ? rows : '<div class="empty"><div class="empty-text">Noch keine Daten</div></div>'}
+        </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════════════════════
+
+function renderSettings() {
+    document.getElementById('sec-settings').innerHTML = `
+        <div class="settings-section-lbl">Spieler verwalten</div>
+
+        <div class="settings-row" onclick="openAddPlayer()">
+            <div class="settings-icon">👤</div>
+            <div class="settings-info">
+                <div class="settings-title">Neues Mitglied hinzufügen</div>
+                <div class="settings-sub">Spieler zum Register hinzufügen</div>
+            </div>
+        </div>
+
+        <div class="settings-row" onclick="openRegister()">
+            <div class="settings-icon">📋</div>
+            <div class="settings-info">
+                <div class="settings-title">Spieler-Register anzeigen</div>
+                <div class="settings-sub">Alle Mitglieder verwalten</div>
+            </div>
+        </div>
+
+        <div class="settings-section-lbl" style="margin-top:16px">Daten</div>
+
+        <div class="settings-row" onclick="exportData()">
+            <div class="settings-icon">📤</div>
+            <div class="settings-info">
+                <div class="settings-title">Daten exportieren</div>
+                <div class="settings-sub">Alle Spiele als JSON speichern</div>
+            </div>
+        </div>
+
+        <div class="settings-row" onclick="importClick()">
+            <div class="settings-icon">📥</div>
+            <div class="settings-info">
+                <div class="settings-title">Daten importieren</div>
+                <div class="settings-sub">Backup wiederherstellen</div>
+            </div>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+
+        <div class="settings-row red" onclick="confirmReset()">
+            <div class="settings-icon">🗑</div>
+            <div class="settings-info">
+                <div class="settings-title red">Spielverlauf löschen</div>
+                <div class="settings-sub">Alle gespeicherten Spiele entfernen</div>
+            </div>
+        </div>
+
+        <div class="app-footer">
+            The Ledger · Watten Tracker v2.0<br>
+            Für den privaten Gebrauch
+        </div>`;
+}
+
+// ── Add Player ──
+let newColor = PALETTE[0];
+
+function openAddPlayer() {
+    document.getElementById('new-player-name').value = '';
+    newColor = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    renderColorPicker();
+    openModal('modal-addplayer');
+    setTimeout(() => document.getElementById('new-player-name').focus(), 200);
+}
+
+function renderColorPicker() {
+    document.getElementById('color-picker').innerHTML = PALETTE.map(c => `
+        <div onclick="pickColor('${c}')" style="
+            width:34px;height:34px;border-radius:10px;background:${c};cursor:pointer;
+            border: 3px solid ${c === newColor ? '#fff' : 'transparent'};
+            transition: border-color .15s">
+        </div>`).join('');
+}
+
+function pickColor(c) { newColor = c; renderColorPicker(); }
+
+function addPlayerConfirm() {
+    const name = document.getElementById('new-player-name').value.trim();
+    if (!name) return;
+    D.players.push({ id: pid(), name, color: newColor, active: true });
+    save();
+    closeModal('modal-addplayer');
+    toast('✓ ' + name + ' hinzugefügt!');
+    renderSettings();
+}
+
+// ── Register ──
+function openRegister() {
+    renderRegisterModal();
+    openModal('modal-register');
+}
+
+function renderRegisterModal() {
+    document.getElementById('modal-register-list').innerHTML =
+        D.players.map(p => {
+            const s = statsFor(p.id);
+            return `
+            <div class="player-card">
+                ${avatar(p,'sm')}
+                <div class="player-info">
+                    <div class="player-name">${p.name}</div>
+                    <div class="player-sub">${s.games} Sp. · ${s.wins} Siege</div>
+                </div>
+                <span class="badge ${p.active ? 'badge-aktiv' : 'badge-inaktiv'}"
+                      onclick="toggleActive('${p.id}')">
+                    ${p.active ? 'AKTIV' : 'INAKTIV'}
+                </span>
+            </div>`;
+        }).join('');
+}
+
+function toggleActive(id) {
+    const p = D.players.find(x => x.id === id);
+    if (p) { p.active = !p.active; save(); renderRegisterModal(); }
+}
+
+// ── Export / Import ──
+function exportData() {
+    const blob = new Blob([JSON.stringify(D, null, 2)], { type:'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'watten-ledger-' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('✓ Backup gespeichert!');
+}
+
+function importClick() { document.getElementById('importFile').click(); }
+
+function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const imp = JSON.parse(ev.target.result);
+            if (imp.players && imp.games) {
+                D = imp;
+                save();
+                toast('✓ Daten importiert!');
+                renderDashboard();
+                renderSettings();
+            } else { alert('Ungültige Backup-Datei.'); }
+        } catch { alert('Fehler beim Importieren.'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+}
+
+// ── Delete single game ──
+function deleteGame(id) {
+    if (confirm('Dieses Spiel löschen?')) {
+        D.games = D.games.filter(g => g.id !== id);
+        save();
+        toast('✓ Spiel gelöscht');
+        renderDashboard();
+    }
+}
+
+// ── Reset ──
+function confirmReset() {
+    if (confirm('Wirklich alle Spiele löschen?\nDiese Aktion kann nicht rückgängig gemacht werden.')) {
+        D.games = [];
+        save();
+        toast('✓ Spielverlauf gelöscht');
+        renderSettings();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER MAP + INIT
+// ═══════════════════════════════════════════════════════════
+
+const renders = {
+    dashboard: renderDashboard,
+    game:      renderGame,
+    stats:     renderStats,
+    settings:  renderSettings
+};
+
+renderDashboard();
+</script>
+</body>
+</html>
