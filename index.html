@@ -309,7 +309,7 @@ function _rf(){
             '</div>'+
             '<div class="chips-row">'+
             '<span class="chips-lbl">Chips / Geld</span>'+
-            '<div class="chips-sign '+(c<0?'negative':'positive')+'" onclick="toggleSign(\''+p.id+'\')">'+(c<0?'-':'+')+'</div>'+
+            '<button type="button" class="chips-sign '+(c<0?'negative':'positive')+'" onclick="toggleSign(\''+p.id+'\')">'+(c<0?'-':'+')+'</button>'+
             '<input class="chips-input" type="number" min="0" max="9999" value="'+Math.abs(c)+'" '+
             'oninput="setChips(\''+p.id+'\',this.value)" placeholder="0">'+
             '<span class="chips-unit">EUR</span>'+
